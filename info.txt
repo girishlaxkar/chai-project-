@@ -1,3 +1,11 @@
 pro tips =>
 1.whenever talk to database you must use try and catch and async await.
 2.think as database is in difft continent so u shld alw use async await.
+
+
+We use mongoose-aggregate-paginate-v2 so our apps don’t get overloaded when
+showing lots of data. It breaks big results into small, easy-to-read pages —
+just like flipping through a comic book instead of carrying the whole library at once.
+we will use it in video.models.js
+
+
