@@ -1,0 +1,3 @@
+pro tips =>
+1.whenever talk to database you must use try and catch and async await.
+2.think as database is in difft continent so u shld alw use async await.
