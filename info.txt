@@ -9,3 +9,187 @@ just like flipping through a comic book instead of carrying the whole library at
 we will use it in video.models.js
 
 
+
+we will use cloudnary and multer for uploading file 
+
+
+multer =>it will not process any form which is not multipart(therefor enctype="multipart/form-data" is needed)
+for uploading file
+<form action="/upload" method="post" enctype="multipart/form-data">
+  <input type="file" name="myFile" />
+  <button type="submit">Upload</button>
+</form>
+
+
+- enctype → Stands for encoding type. It tells the browser how to encode the form data before sending it to the server.
+- multipart/form-data → Used when your form includes file uploads.
+- It splits the form data into multiple parts (text fields + binary file data).
+- Each part is separated by a boundary string.
+
+
+// 📦 MULTER SETUP FOR FILE UPLOADS
+
+const express = require('express')         // Import Express framework
+const multer = require('multer')           // Import Multer middleware
+
+// 🗂️ Configure Multer to store uploaded files in 'uploads/' directory
+const upload = multer({ dest: 'uploads/' })
+
+// 🧠 Multer adds two key objects to req:
+// req.body → contains values of text fields from the form
+// req.file or req.files → contains uploaded file(s) from the form
+
+// ⚠️ IMPORTANT: Your HTML form MUST include:
+// enctype="multipart/form-data"
+// This tells the browser to split the form into parts (text + binary)
+
+// ✅ BASIC HTML FORM STRUCTURE:
+/*
+<form action="/profile" method="post" enctype="multipart/form-data">
+  <input type="file" name="avatar" />
+</form>
+*/
+
+// 🧪 This setup allows you to handle file uploads like:
+// app.post('/profile', upload.single('avatar'), (req, res) => {
+//   console.log(req.file)   // Access uploaded file metadata
+//   console.log(req.body)   // Access other form fields
+//   res.send('File uploaded!')
+// })
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    // 📁 Set upload folder
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    // 🧠 Rename file: fieldname + timestamp + original extension
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + Date.now() + ext);
+  }
+});
+
+// 🚀 Create Multer instance with diskStorage
+const upload = multer({ storage: storage });
+
+// 🛠️ Route to handle file upload
+app.post('/upload', upload.single('myFile'), (req, res) => {
+  // 📦 Access uploaded file metadata
+  console.log(req.file);
+
+  // 🧾 Access other form fields (if any)
+  console.log(req.body);
+
+  res.send('File uploaded successfully!');
+});
+
+
+http =>hyper text transfer protocol
+
+
+url -uniform resource locator
+uri - identifier
+urn - name
+
+// 🌐 HTTP HEADERS — CHEAT SHEET STYLE
+
+// 📦 What are HTTP headers?
+// Headers = metadata sent as key-value pairs with every HTTP request and response
+// Used for: caching, authentication, managing state, compression, etc.
+
+// 🧭 Types of Headers:
+
+// 1️⃣ Request Headers → sent from client (e.g., browser)
+//     - Examples: Authorization, User-Agent, Accept, Cookie
+
+// 2️⃣ Response Headers → sent from server
+//     - Examples: Set-Cookie, Content-Type, Cache-Control
+
+// 3️⃣ Representation Headers → describe encoding/compression
+//     - Examples: Content-Encoding, Content-Language
+
+// 4️⃣ Payload Headers → describe actual data
+//     - Examples: Content-Length, Content-Type
+
+// ⚠️ Legacy Note:
+// "X-" prefix headers (e.g., X-Powered-By) were common pre-2012 but are now deprecated
+
+
+// 🌐 HTTP HEADERS — MOST COMMON, CORS, SECURITY
+
+// 🔸 Most Common Headers
+// Accept: 'application/json'         // Client expects JSON response
+// User-Agent: 'Mozilla/5.0'          // Info about konsi application se req aayi hai eg: browser,postman
+// Authorization: 'Bearer <token>'    // Used for authentication
+// Content-Type: 'application/json'   // Format of request body
+// Cookie: 'sessionId=abc123'         // Client-side state management
+// Cache-Control: 'no-cache'          // Caching behavior
+
+these below does not do anything these are just internal policies of companies that kha kha se req aa skti hai
+ye sirf header info  but isme aapko he code likhna hota hai
+
+// 🔸 CORS Headers (Cross-Origin Resource Sharing)
+// Access-Control-Allow-Origin: '*' or specific domain
+// Access-Control-Allow-Credentials: true/false
+// Access-Control-Allow-Methods: 'GET, POST, PUT, DELETE'
+
+// 🔸 Security Headers
+// Cross-Origin-Embedder-Policy: 'require-corp'         // Blocks untrusted embeds
+// Cross-Origin-Opener-Policy: 'same-origin'            // Isolates browsing context
+// Content-Security-Policy: "default-src 'self'"        // Prevents XSS, data injection
+// X-XSS-Protection: '1; mode=block'                    // Legacy XSS protection (deprecated)
+
+// 🌐 HTTP METHODS — CHEAT SHEET
+
+// Basic set of operations used to interact with a server
+
+// 🔹 GET
+// Retrieve a resource (e.g., fetch user profile, list of posts)
+
+// 🔹 HEAD[less use]
+// Like GET but returns only headers (no body); used for metadata checks
+
+// 🔹 OPTIONS[less use]
+// Ask the server what methods are allowed on a resource (CORS preflight)
+
+// 🔹 TRACE
+// Loopback test — echoes the request back for debugging
+
+// 🔹 DELETE
+// Remove a resource (e.g., delete user, remove post)
+
+// 🔹 PUT
+// Replace a resource entirely (idempotent — same result every time)
+
+// 🔹 POST
+// Create or interact with a resource (commonly used to add new data)
+
+// 🔹 PATCH
+// Modify part of a resource (partial update — not full replacement)
+
+
+
+// 🌐 HTTP STATUS CODES — CHEAT SHEET
+
+// 🔹 1xx — Informational
+// 100: Continue               // Client should continue with request
+// 102: Processing             // Server has accepted but not completed the request
+
+// 🔹 2xx — Success
+// 200: OK                     // Standard success response
+// 201: Created                // Resource successfully created
+// 202: Accepted               // Request accepted but not yet processed
+
+// 🔹 3xx — Redirection
+// 307: Temporary Redirect     // Resource temporarily moved
+// 308: Permanent Redirect     // Resource permanently moved
+
+// 🔹 4xx — Client Error[client se info sahi se nhi aayi hai]
+// 400: Bad Request            // Malformed syntax or invalid request
+// 401: Unauthorized           // Authentication required[u r lofgin but u r not authorised]
+// 402: Payment Required       // Reserved for future use
+// 404: Not Found              // Resource doesn't exist
+
+// 🔹 5xx — Server Error
+// 500: Internal Server Error  // Generic server failure
+// 504: Gateway Timeout        // Server didn’t get response from upstream

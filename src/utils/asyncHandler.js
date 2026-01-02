@@ -1,11 +1,11 @@
 //higher order function => jo functions jo function ko as a parameter bhi accept kar skte hai ya phir usko return kar skte hai
 
 const asyncHandler = (reqHandler) =>{
-    (req,res,next)=>{
+    return(req,res,next)=>{
     Promise.resolve(reqHandler(req,res,next)).catch((err)=>next(err))
 }}
 
-export {asyncHandler};
+export {asyncHandler}; 
 
 
 

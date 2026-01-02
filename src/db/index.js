@@ -16,4 +16,4 @@ const connectDB = async () => {
     // -> Often used in scripts, CI/CD, or when app cannot recover
   }
 };
-export default connectDB;
+export { connectDB };

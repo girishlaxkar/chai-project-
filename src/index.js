@@ -1,6 +1,6 @@
 // require('dotenv').config({path:'./env'});//here this require statment is not consistent with type:module[it will not give error but then also it not look good]
 import dotenv from "dotenv";
-import connectDB from "./db/index.js";
+import {connectDB} from "./db/index.js";
 import { app } from "./app.js";
 
 dotenv.config({
@@ -8,7 +8,7 @@ dotenv.config({
 });
 
 //whenever any async method completed than it also sends an promise so =>
-connectDB
+connectDB()
   .then(() => {
     app.on("error",(error)=>{
         console.log("ERR: ",error);
