@@ -32,7 +32,7 @@ const userSch = new Schema (
         coverImage:{
             type:String
         },
-        warchHistory:[
+        warchHistory:[//bydeafult empty jse jse user dekhega videos wo add hote jayenge
             {
                 type:Schema.Types.ObjectId,
                 ref:"Video"
@@ -83,7 +83,7 @@ userSch.methods.generateAccessToken = async function () {
 )
 }
 
-//our refresh token also have same but it have less info as it refreshes againa nd again so we have only id in it
+//our refresh token also have same but it have less info as it refreshes again nd again so we have only id in it
 userSch.methods.generateRefreshToken = async function () {
     return jwt.sign(
         {

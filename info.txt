@@ -2,6 +2,21 @@ pro tips =>
 1.whenever talk to database you must use try and catch and async await.
 2.think as database is in difft continent so u shld alw use async await.
 
+try {
+    const connectionInstance = await mongoose.connect(`${process.env.MONGODB_URL}/${DB_NAME}`);
+    console.log(`\n MongoDB connected !! DB HOST: ${connectionInstance.connection.host}`);//this is tell whole url where mongodb connection happens
+    //this is to check if we by mistake we connect to difft url than production and get to know on which connection we are connecting
+  } catch (error) {
+    console.log("MONGODB connection failed ", error);//these logs are very impotant to see where i m doing the errors
+    process.exit(1);
+    // process.exit(code)
+    // -> Immediately stops the Node.js process
+    // -> Exit code convention:
+    //    0 = success (program finished correctly)
+    //    1 = failure (program crashed or critical error)
+    // -> Often used in scripts, CI/CD, or when app cannot recover
+  }
+
 
 We use mongoose-aggregate-paginate-v2 so our apps don’t get overloaded when
 showing lots of data. It breaks big results into small, easy-to-read pages —
@@ -33,23 +48,17 @@ const express = require('express')         // Import Express framework
 const multer = require('multer')           // Import Multer middleware
 
 // 🗂️ Configure Multer to store uploaded files in 'uploads/' directory
-const upload = multer({ dest: 'uploads/' })
 
-// 🧠 Multer adds two key objects to req:
-// req.body → contains values of text fields from the form
-// req.file or req.files → contains uploaded file(s) from the form
-
-// ⚠️ IMPORTANT: Your HTML form MUST include:
-// enctype="multipart/form-data"
-// This tells the browser to split the form into parts (text + binary)
-
-// ✅ BASIC HTML FORM STRUCTURE:
-/*
-<form action="/profile" method="post" enctype="multipart/form-data">
-  <input type="file" name="avatar" />
-</form>
-*/
-
+// ================= Multer Config Cheat Sheet =================
+//
+// 1. Using `dest`
+// -------------------------------------------------------------
+// const upload = multer({ dest: 'uploads/' });
+// - Quick setup: tells Multer to save files in 'uploads/' folder.
+// - Filenames are auto-generated (random safe IDs).
+// - No control over naming or dynamic destination.
+// - Good for demos, testing, or when you don’t care about filenames.
+//
 // 🧪 This setup allows you to handle file uploads like:
 // app.post('/profile', upload.single('avatar'), (req, res) => {
 //   console.log(req.file)   // Access uploaded file metadata
@@ -57,18 +66,18 @@ const upload = multer({ dest: 'uploads/' })
 //   res.send('File uploaded!')
 // })
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    // 📁 Set upload folder
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    // 🧠 Rename file: fieldname + timestamp + original extension
-    const ext = path.extname(file.originalname);
-    cb(null, file.fieldname + '-' + Date.now() + ext);
-  }
-});
-
+// 2. Using `storage`
+// -------------------------------------------------------------
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => cb(null, 'uploads/'), // custom folder
+//   filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname) // custom name
+// });
+// const upload = multer({ storage: storage });
+// - Full control over where files go and how they’re named.
+// - Can use logic (timestamps, user IDs, file types).
+// - Production‑ready: predictable filenames, easy to save paths in DB.
+//
+ 
 // 🚀 Create Multer instance with diskStorage
 const upload = multer({ storage: storage });
 
@@ -81,6 +90,34 @@ app.post('/upload', upload.single('myFile'), (req, res) => {
   console.log(req.body);
 
   res.send('File uploaded successfully!');
+});
+
+
+//accessing file in both formate is same whether it is using storage or dest
+
+
+// Single file upload
+app.post('/profile', upload.single('avatar'), (req, res) => {
+  console.log(req.file);   // one file
+});
+
+// Multiple files under one field
+app.post('/gallery', upload.array('photos', 5), (req, res) => {
+  console.log(req.files);  // array of files
+});
+
+// Multiple fields with different names
+app.post('/profile', upload.fields([
+  { name: 'avatar', maxCount: 1 },
+  { name: 'coverImage', maxCount: 1 }
+]), (req, res) => {
+  console.log(req.files.avatar);     // array with avatar file
+  console.log(req.files.coverImage); // array with cover image
+});
+
+// No files, only text fields
+app.post('/form', upload.none(), (req, res) => {
+  console.log(req.body);   // text fields only
 });
 
 
@@ -193,3 +230,166 @@ ye sirf header info  but isme aapko he code likhna hota hai
 // 🔹 5xx — Server Error
 // 500: Internal Server Error  // Generic server failure
 // 504: Gateway Timeout        // Server didn’t get response from upstream
+
+
+
+
+
+//Think of ApiError as a custom envelope for your backend errors —
+//it wraps the raw error in a structured format so your API responses
+//are clean, predictable, and easy to debug.
+
+class ApiError extends Error {
+  constructor(
+    statusCode,
+    message = "Something went wrong",
+    errors = [],
+    stack = ""
+  ) {
+    super(message);
+    this.statusCode = statusCode;
+    this.data = null;
+    this.message = message;
+    this.success = false;
+    this.errors = errors;
+
+    if (stack) {
+      this.stack = stack;
+    } else {
+      Error.captureStackTrace(this, this.constructor);
+    }
+  }
+}
+
+export { ApiError };
+
+// ---------------- STACK HANDLING IN ApiError ----------------
+
+// Every Error object in JS has a "stack" property
+// - It's a string showing the call path (functions + line numbers)
+// - Example output:
+//   ApiError: Something went wrong
+//       at someFunction (file.js:10:5)
+//       at anotherFunction (file.js:20:3)
+
+// In ApiError constructor:
+// if (stack) {
+//   this.stack = stack;
+//   // 👉 If a custom stack string is passed in, use it directly.
+//   // Example:
+//   // new ApiError(400, "Bad Request", [], "Custom stack trace here")
+//   // => err.stack === "Custom stack trace here"
+// } else {
+//   Error.captureStackTrace(this, this.constructor);
+//   // 👉 If no custom stack is provided:
+//   // - Node.js auto-generates a stack trace
+//   // - captureStackTrace attaches the breadcrumb trail of calls
+//   // - Excludes the constructor itself for cleaner output
+//   // - Helps developers debug by showing where the error originated
+// }
+
+if (
+    [fullname, email, username, password].some((field) => field?.trim() === "")
+  )
+// [fullname, email, username, password]
+// 👉 Creates an array containing the four variables
+
+// .some(callback)
+// 👉 Array method that checks if *at least one* element
+//    satisfies the condition inside the callback
+// 👉 Returns true if any element passes, false otherwise
+
+// (field) => field?.trim() === ""
+// 👉 Callback function run on each element (fullname, email, etc.)
+// 👉 field?.trim():
+//    - ?. is optional chaining → avoids errors if field is null/undefined
+//    - .trim() removes whitespace from start and end of the string
+// 👉 === "" checks if the trimmed string is empty
+
+// So overall:
+// - Loop through [fullname, email, username, password]
+// - For each field, trim whitespace
+// - If any field is empty (""), .some() returns true
+// - Otherwise, returns false
+
+
+
+// Multer configuration: handle multiple file fields in a single form submission
+upload.fields([
+  {
+    name: "avatar",    // field name expected in the form-data (e.g. <input type="file" name="avatar">)
+    maxCount: 1        // allow only 1 file for this field; Multer will still store it in an array
+  },
+  {
+    name: "coverImage", // another field name (e.g. <input type="file" name="coverImage">)
+    maxCount: 1         // allow only 1 file for this field as well
+  }
+]);
+
+// After this middleware runs, Multer will populate req.files like:
+// {
+//   avatar: [ { ...fileObject } ],      // array containing the uploaded avatar file
+//   coverImage: [ { ...fileObject } ]   // array containing the uploaded cover image file
+// }
+//
+// Each fileObject includes metadata such as:
+// fieldname, originalname, mimetype, destination, filename, path, size
+//
+// Example access:
+// const avatarLocalPath = req.files?.avatar?.[0]?.path;       // path of uploaded avatar
+// const coverImageLocalPath = req.files?.coverImage?.[0]?.path; // path of uploaded cover image
+//
+// Note: [0] is required because Multer always stores files in arrays,
+// even if maxCount = 1.
+
+//=============================uploading file on cloudinary======================================
+
+const uploadOnCloudinary = async (localFilePath) => {
+  try {
+    if (!localFilePath) return null;
+    //upload the file on cloudinary
+    const response = await cloudinary.uploader.upload(localFilePath, {
+      resource_type: "auto",//it will automatically detect the type of file
+    });
+    console.log("file uploaded on cloudinary ", response.url); 
+    return response;
+  } catch (error) {
+    fs.unlinkSync(localFilePath);//remove the file from local server if any error occurs
+    console.log("Error in uploading file on cloudinary", error);
+    return null;
+  }
+};
+
+{
+  asset_id: "abc123xyz",        // unique ID for the asset
+  public_id: "folder/filename", // the public identifier you can use to access it
+  version: 1678901234,          // version number
+  width: 800,                   // width in pixels (for images)
+  height: 600,                  // height in pixels
+  format: "jpg",                // file format
+  resource_type: "image",       // type of resource (image, video, raw, etc.)
+  created_at: "2026-01-02T14:21:00Z", // upload timestamp
+  bytes: 123456,                // file size in bytes
+  type: "upload",               // delivery type
+  url: "http://res.cloudinary.com/.../filename.jpg", // direct URL to the file
+  secure_url: "https://res.cloudinary.com/.../filename.jpg" // HTTPS URL
+}
+
+
+
+
+
+// Using Mongoose .select() to control which fields are returned
+// -------------------------------------------------------------
+// User.findById(user._id) → finds the user document by its unique _id
+// .select("-password -refreshToken") → exclude these fields from the result
+//   - The minus sign (-) means "do not include this field"
+//   - Useful for hiding sensitive data like hashed passwords or tokens
+//
+// Example:
+// Without .select → result includes all fields (name, email, password, refreshToken, etc.)
+// With .select("-password -refreshToken") → result excludes those fields
+//
+// So createdUser will contain only safe fields (like _id, name, email),
+// while password and refreshToken are filtered out.
+const createdUser = await User.findById(user._id).select("-password -refreshToken");
