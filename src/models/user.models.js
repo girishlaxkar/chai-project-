@@ -10,7 +10,8 @@ const userSch = new Schema (
             unique:true,
             lowercase :true,
             trim:true,
-            index:true
+            index:true//HERE IT IS TRUE AS WE WANT TO SEARCH USER BY USERNAME FREQUENTLY SO IT WILL MAKE SEARCHING FASTER
+            
         },
         email :{
             type:String,
@@ -55,10 +56,9 @@ const userSch = new Schema (
 // That pre("save") hook is a Mongoose middleware that runs automatically before a document is saved to the database.
 // This pre‑save hook ensures every user’s password is securely converted into a hash before being saved in MongoDB.
 
-userSch.pre("save",async function (next) {
-    if(!this.isModified("password")) return next();
+userSch.pre("save",async function () {
+    if(!this.isModified("password")) return ;
     this.password = await bcrypt.hash(this.password,10);
-    next();
 })
 
 // - userSch.methods → This is how you add custom instance methods 

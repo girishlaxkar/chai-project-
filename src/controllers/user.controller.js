@@ -1,7 +1,7 @@
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js"; //this is to hancle the error
 import {User} from "../models/user.models.js";
-import { uploadOnCloudinary } from "../utils/cloudnary.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 const registerUser = asyncHandler(async (req, res, next) => {
   //steps =>1.get user details from frontend=>we will get data by req.body but we cannot get files directly so we will use multer middleware.[upload.fields..in route]
@@ -15,7 +15,6 @@ const registerUser = asyncHandler(async (req, res, next) => {
   //9.return response
 
   const { fullname, email, username, password } = req.body;
-  console.log("email: ", email);
   
   if (
     [fullname, email, username, password].some((field) => field?.trim() === "")
@@ -31,11 +30,19 @@ const registerUser = asyncHandler(async (req, res, next) => {
         throw new ApiError(409, "User with email or username already exists");
     } 
 
-    const avatarLocalPath = req.files?.avatar[0]?.path;
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    
+    const avatarLocalPath = req.files.avatar?req.files.avatar[0]?.path:null;
+    const coverImageLocalPath = req.files.coverImage?req.files.coverImage[0]?.path:null ;
+// let coverImageLocalPath;
+// if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0){
+//     coverImageLocalPath = req.files.coverImage[0].path;
+// }
+
     if (!avatarLocalPath ) {//as avatar is required
         throw new ApiError(400, "Avatar files is required");
-    }   
+    }  
+    console.log(avatarLocalPath);
+    console.log(coverImageLocalPath);
     //upload to cloudinary
     const avatarUploadResponse = await uploadOnCloudinary(avatarLocalPath);
     const coverImageUploadResponse = coverImageLocalPath
@@ -66,7 +73,6 @@ const registerUser = asyncHandler(async (req, res, next) => {
     }
 
     return res.status(201).json(new ApiResponse(200, createdUser, "User registered successfully"));//we will make a new ApiResponse object and send it as response
-
 
 });
 

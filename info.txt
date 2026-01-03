@@ -393,3 +393,8 @@ const uploadOnCloudinary = async (localFilePath) => {
 // So createdUser will contain only safe fields (like _id, name, email),
 // while password and refreshToken are filtered out.
 const createdUser = await User.findById(user._id).select("-password -refreshToken");
+
+
+
+
+visit 30 min video 15 it tells you something important abt postman
