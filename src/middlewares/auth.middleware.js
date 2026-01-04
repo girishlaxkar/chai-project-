@@ -1,9 +1,9 @@
-import { User } from "../models/user.models";
+import { User } from "../models/user.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
 
-export const verifyJWT = asyncHandler(async (req, _, next) => {//SOME u will find that res is not used so we will put _ in place of res 
+export const verifyJWT = asyncHandler(async (req,_, next) => {//SOME u will find that res is not used so we will put _ in place of res 
    try {
     const token = req.cookies?.accessToken || req.header
      ("Authorization")?.replace("Bearer ","");//optional chaining is used to avoid error if cookies is undefined
@@ -17,7 +17,6 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {//SOME u will fin
      if(!user){  
          throw new ApiError(401,"Unauthorized: User not found");
      }
- 
      req.user = user;//we are attaching user to req object so that we can access it in next middlewares or controllers
      next();//if everything is fine then we will call next to proceed to next middleware or controller   
  

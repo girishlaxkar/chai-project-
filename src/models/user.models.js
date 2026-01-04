@@ -53,7 +53,7 @@ const userSch = new Schema (
     }
 )
 
-// That pre("save") hook is a Mongoose middleware that runs automatically before a document is saved to the database.
+//  That pre("save") hook is a Mongoose middleware that runs automatically before a document is saved to the database.
 // This pre‑save hook ensures every user’s password is securely converted into a hash before being saved in MongoDB.
 
 userSch.pre("save",async function () {
@@ -68,10 +68,12 @@ userSch.pre("save",async function () {
 userSch.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password,this.password);
 }
-userSch.methods.generateAccessToken = async function () {
+
+
+userSch.methods.generateAccessToken =  function () {
     return jwt.sign(
         {
-            _is:this._id,
+            _id:this._id,
             email:this.email,
             username:this.username,
             fullname:this.fullname
@@ -84,10 +86,10 @@ userSch.methods.generateAccessToken = async function () {
 }
 
 //our refresh token also have same but it have less info as it refreshes again nd again so we have only id in it
-userSch.methods.generateRefreshToken = async function () {
+userSch.methods.generateRefreshToken =  function () {
     return jwt.sign(
         {
-            _is:this._id
+            _id:this._id
         },
         process.env.REFRESH_TOKEN_SECRET,
         {

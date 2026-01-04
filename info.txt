@@ -526,3 +526,17 @@ function logout() {
 // - Call login, then fetch profile
 // login("girish", "1234").then(() => getUserProfile());
 
+
+
+//this is an synchronous function so we dont not async and await thing
+jwt.sign(
+        {
+            _id:this._id
+        },
+        process.env.REFRESH_TOKEN_SECRET,
+        {
+            expiresIn:process.env.REFRESH_TOKEN_EXPIRY
+        }
+)
+
+async function gives an promise

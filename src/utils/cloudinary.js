@@ -4,6 +4,7 @@ dotenv.config();
 import { v2 as cloudinary } from "cloudinary"; //as here v2 is not looking good so we will give it a name cloudnary
 import fs from "fs";
 import path from "path";
+import { log } from "console";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -15,10 +16,14 @@ const uploadOnCloudinary = async (localFilePath) => {
     try {
         if (!localFilePath) return null;
         const normalizedPath = path.normalize(localFilePath);
+        console.log("Normalized Path:", normalizedPath);
     //upload the file on cloudinary
     const response = await cloudinary.uploader.upload(normalizedPath, {
       resource_type: "auto",//it will automatically detect the type of file
+      timeout: 60000,//timeout in ms
     });
+    console.log(response);
+    
     fs.unlinkSync(normalizedPath);//remove the file from local server after successful upload   
     // console.log("file uploaded on cloudinary ", response.url); 
     return response;

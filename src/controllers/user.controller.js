@@ -25,14 +25,14 @@ const generateAccessAndRefreshTokens = async (userId) => {
 
 const registerUser = asyncHandler(async (req, res, next) => {
   //steps =>1.get user details from frontend=>we will get data by req.body but we cannot get files directly so we will use multer middleware.[upload.fields..in route]
-  //2.validation[any input field shld not empty or in right formate]
-  //3.check if user aldy exist:username and email
-  //4.check agr hamari files h k ni for images and avatar//as they are required
-  //5.if available then upload them to cloudinary ,avatar
-  //6.create user object - create entryin db
-  //7.remove password and refresh token field from response
-  //8.check for usercreation
-  //9.return response
+          //2.validation[any input field shld not empty or in right formate]
+          //3.check if user aldy exist:username and email
+          //4.check agr hamari files h k ni for images and avatar//as they are required
+          //5.if available then upload them to cloudinary ,avatar
+          //6.create user object - create entryin db
+          //7.remove password and refresh token field from response
+          //8.check for usercreation
+          //9.return response
 
   const { fullname, email, username, password } = req.body;
 
@@ -106,12 +106,23 @@ const loginUser = asyncHandler(async (req, res, next) => {
   //6.send cookies and response
 
   const { username, email, password } = req.body;
-  if (!username || !password) {
+  if (!username && !password) {
     throw new ApiError(400, "Username or password is required");
   }
+  
+  
+  // here is an alternative way to check if either username or email is provided
+  // if (!(username ||  password)) {
+  //   throw new ApiError(400, "Username or password is required");
+  // }
+  
+
+
   const user = await User.findOne({
     $or: [{ username }, { email }],
   });
+  console.log(user);
+  
 
   if (!user) {
     throw new ApiError(404, "User not found");
@@ -121,6 +132,8 @@ const loginUser = asyncHandler(async (req, res, next) => {
 
   const isPasswordCorrect = await user.isPasswordCorrect(password); //it will throw error if password is incorrect
 
+  console.log(isPasswordCorrect);
+  
   if (!isPasswordCorrect) {
     throw new ApiError(401, "Invalid password");
   }
