@@ -1,7 +1,20 @@
 import { Router } from "express";
-import { registerUser, loginUser, logoutUser, refreshAccessToken } from "../controllers/user.controller.js";
+import {
+  registerUser,
+  loginUser,
+  logoutUser,
+  refreshAccessToken,
+  changeCurrentPassword,
+  getCurrentUserProfile,
+  updateAccountDetails,
+  updateUserAvatar,
+  updateUserCoverImage,
+  getUserChannelProfile,
+  getWatchHistory,
+} from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { get } from "http";
 
 const router = Router();
 
@@ -42,5 +55,18 @@ router.route("/login").post(loginUser);
 //secured route
 router.route("/logout").post(verifyJWT, logoutUser);
 router.route("/refresh-access-token").post(refreshAccessToken); //to be implemented in future
+router.route("/change-password").post(verifyJWT, changeCurrentPassword);
+router.route("/current-user").get(verifyJWT, getCurrentUserProfile);
+router.route("/update-account").patch(verifyJWT, updateAccountDetails);
+router
+  .route("/update-avatar")
+  .patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
 
+router
+  .route("/update-cover-image")
+  .patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage);
+
+router.route("/channel/:username").get(verifyJWT, getUserChannelProfile); //here username is dynamic parameter as in url we will pass username whose channel we want to see[for accessing username use req.params.username in controller]
+
+router.route("/watch-history").get(verifyJWT, getWatchHistory);
 export default router;
